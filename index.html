@@ -31,74 +31,158 @@
       padding: 0;
     }
 
-    /* Dark Mode Styles */
+    /* Premium Dark Mode Styles */
     body.dark-mode {
-      background: #121212;
-      color: #ffffff;
+      background: #0f1115;
+      color: #e4e6eb;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .sidebar.dark-mode {
-      background: #1e1e1e;
+      background: #1b1f27;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
     .header.dark-mode {
-      background: #1e1e1e;
+      background: #1b1f27;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
     .card.dark-mode {
-      background: #2a2a2a;
+      background: #1b1f27;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
     .stat-item.dark-mode {
-      background: #2a2a2a;
+      background: #1b1f27;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
     .stat-item.dark-mode h3,
     .stat-item.dark-mode .comparison-matrix {
-      color: #ffffff;
+      color: #e4e6eb;
+    }
+
+    .stat-item.dark-mode .value {
+      color: #4CAF50;
+    }
+
+    .stat-item.dark-mode i {
+      color: #4CAF50;
+      background: rgba(76, 175, 80, 0.1);
     }
 
     .nav-item.dark-mode:hover, .nav-item.dark-mode.active {
-      background: #333333;
-      color: #ffffff;
+      background: #252932;
+      color: #4CAF50;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+    }
+
+    .nav-item.dark-mode i {
+      color: #e4e6eb;
+    }
+
+    .nav-item.dark-mode:hover i, .nav-item.dark-mode.active i {
+      color: #4CAF50;
     }
 
     .status-card.dark-mode {
-      background: #2a2a2a;
+      background: #1b1f27;
     }
 
     .status-card.dark-mode h4 {
-      color: var(--primary);
+      color: #4CAF50;
     }
 
     .status-card.dark-mode p {
-      color: #ffffff;
+      color: #e4e6eb;
     }
 
     .efficiency-meter.dark-mode {
-      background: #1e1e1e;
+      background: #252932;
+    }
+
+    .progress-bar.dark-mode {
+      background: #2a2f3a;
+    }
+
+    .efficiency-value.dark-mode {
+      color: #e4e6eb;
     }
 
     .system-info.dark-mode {
-      background: #2a2a2a; 
-      color: #ffffff;
+      background: #1b1f27;
+      color: #e4e6eb;
     }
     
     .system-info.dark-mode p {
-      color: #ffffff; 
+      color: #e4e6eb;
     }
 
     .analytics-card.dark-mode {
-      background: #2a2a2a;
-      color: #ffffff; 
+      background: #1b1f27;
+      color: #e4e6eb;
     }
   
     .analytics-card.dark-mode h3 {
-      color: var(--primary); 
+      color: #4CAF50;
     }
   
     .analytics-card.dark-mode p {
-      color: #ffffff; 
+      color: #e4e6eb;
+    }
+
+    .control-btn.dark-mode {
+      background: #252932;
+    }
+
+    .control-btn.dark-mode.active {
+      background: #2E7D32;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+    }
+
+    .action-btn.dark-mode {
+      background: #252932;
+      color: #e4e6eb;
+    }
+
+    .action-btn.dark-mode:hover {
+      background: #2E7D32;
+      color: #ffffff;
+    }
+
+    .notification-dropdown.dark-mode {
+      background: #1b1f27;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+    }
+
+    .dropdown-header.dark-mode {
+      color: #4CAF50;
+      border-bottom: 1px solid #252932;
+    }
+
+    .alert.dark-mode.warning {
+      background: rgba(245, 124, 0, 0.15);
+      color: #ff9800;
+      border-left: 3px solid #ff9800;
+    }
+
+    .alert.dark-mode.success {
+      background: rgba(46, 125, 50, 0.15);
+      color: #4CAF50;
+      border-left: 3px solid #4CAF50;
+    }
+
+    .alert.dark-mode.info {
+      background: rgba(33, 150, 243, 0.15);
+      color: #2196F3;
+      border-left: 3px solid #2196F3;
+    }
+
+    .alert.dark-mode.error {
+      background: rgba(244, 67, 54, 0.15);
+      color: #f44336;
+      border-left: 3px solid #f44336;
     }
 
     * {
@@ -788,6 +872,104 @@
       background: var(--primary);
       color: white;
     }
+
+    .system-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .system-status-indicator.online {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4CAF50;
+    }
+
+    .system-status-indicator.offline {
+      background: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+    }
+
+    .system-status-indicator i {
+      font-size: 0.7rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .alert.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border-left: 3px solid #1976d2;
+    }
+
+    .alert.error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 3px solid #c62828;
+    }
+
+    .notification-item {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .notification-item:hover {
+      background: rgba(0,0,0,0.05);
+    }
+
+    .notification-item.dark-mode:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .notification-icon {
+      font-size: 1.1rem;
+      margin-top: 0.1rem;
+      flex-shrink: 0;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-time {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+
+    .notification-remove {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      opacity: 0.6;
+      font-size: 1.2rem;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .notification-remove:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -821,8 +1003,12 @@
       </ul>
       <div class="status-card">
         <h4>System Status</h4>
-        <p id="systemStatus">All systems operational</p>
-        <p>Last updated: <span id="lastUpdate">Just now</span></p>
+        <div class="system-status-indicator" id="systemStatusIndicator">
+          <i class="fas fa-circle"></i>
+          <span id="systemStatusText">OFFLINE</span>
+        </div>
+        <p id="systemStatus">Waiting for data...</p>
+        <p>Last updated: <span id="lastUpdate">Never</span></p>
       </div>
       <div class="system-info">
         <h4>System Info</h4>
@@ -964,7 +1150,11 @@
     let autoMode = true; // Auto mode ON by default
     let gridActiveStartTime = null;
     let firebaseConnected = true;
+    let espOnline = false;
+    let lastDataTimestamp = null;
+    let dataTimeoutCheck = null;
     let currentSensorData = {};
+    let currentControls = {};
     let chartData = {
       timestamps: [],
       solar: [],
@@ -972,27 +1162,75 @@
       consumption: []
     };
 
-    // Initialize Firebase connection monitoring
-    const connectedRef = database.ref(".info/connected");
-    connectedRef.on("value", function(snap) {
-      const wasConnected = firebaseConnected;
-      firebaseConnected = snap.val() === true;
+    // Monitor Firebase Connection
+    function monitorConnection() {
+      const connectedRef = database.ref(".info/connected");
+      connectedRef.on("value", function(snap) {
+        const wasConnected = firebaseConnected;
+        firebaseConnected = snap.val() === true;
+        
+        if (!firebaseConnected && wasConnected) {
+          showNotification("Firebase connection lost", "error", "firebase_disconnected");
+          updateSystemStatus(false);
+        } else if (firebaseConnected && !wasConnected) {
+          showNotification("Firebase connected successfully", "success", "firebase_connected");
+          // Remove disconnected alert if exists
+          removeNotificationByKey('firebase_disconnected');
+        }
+      });
+    }
+
+    // Monitor ESP Online Status and Data Timeout
+    function monitorESPStatus() {
+      // Check for data timeout (> 10 seconds)
+      if (dataTimeoutCheck) {
+        clearInterval(dataTimeoutCheck);
+      }
       
-      if (!firebaseConnected && wasConnected) {
-        showNotification("Firebase connection lost", "warning", "firebase_disconnected");
-      } else if (firebaseConnected && !wasConnected) {
-        showNotification("Firebase reconnected", "success", "firebase_reconnected");
-        // Remove disconnected alert if exists
-        if (alertMap.has('firebase_disconnected')) {
-          const idx = alertList.findIndex(a => a.key === 'firebase_disconnected');
-          if (idx > -1) {
-            alertList.splice(idx, 1);
-            alertMap.delete('firebase_disconnected');
-            renderNotifications();
+      dataTimeoutCheck = setInterval(() => {
+        if (lastDataTimestamp) {
+          const timeSinceLastData = Date.now() - lastDataTimestamp;
+          if (timeSinceLastData > 10000) { // 10 seconds
+            if (espOnline) {
+              espOnline = false;
+              showNotification("No data received for 10+ seconds. ESP may be offline.", "warning", "esp_timeout");
+              updateSystemStatus(false);
+            }
+          } else {
+            if (!espOnline && firebaseConnected) {
+              espOnline = true;
+              showNotification("ESP online - data received", "info", "esp_online");
+              updateSystemStatus(true);
+              removeNotificationByKey('esp_timeout');
+            }
+          }
+        } else {
+          if (espOnline) {
+            espOnline = false;
+            updateSystemStatus(false);
           }
         }
+      }, 2000); // Check every 2 seconds
+    }
+
+    // Update System Status Indicator
+    function updateSystemStatus(online) {
+      const indicator = document.getElementById('systemStatusIndicator');
+      const statusText = document.getElementById('systemStatusText');
+      const systemStatus = document.getElementById('systemStatus');
+      
+      if (indicator && statusText && systemStatus) {
+        if (online && firebaseConnected) {
+          indicator.className = 'system-status-indicator online';
+          statusText.textContent = 'ONLINE';
+          systemStatus.textContent = 'All systems operational';
+        } else {
+          indicator.className = 'system-status-indicator offline';
+          statusText.textContent = 'OFFLINE';
+          systemStatus.textContent = 'System offline or no data';
+        }
       }
-    });
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
       // Power Consumption Chart
@@ -1058,6 +1296,9 @@
       // Setup Firebase Realtime Listeners
       setupFirebaseListeners();
 
+      // Initialize system status
+      updateSystemStatus(false);
+
       // Initialize Auto Mode ON by default (after a short delay to ensure Firebase is ready)
       setTimeout(() => {
         database.ref('controls/auto').once('value', (snapshot) => {
@@ -1077,9 +1318,18 @@
         const data = snapshot.val();
         if (data) {
           currentSensorData = data;
+          lastDataTimestamp = Date.now();
+          
+          // Mark ESP as online when data received
+          if (!espOnline && firebaseConnected) {
+            espOnline = true;
+            showNotification("ESP online - data received", "info", "esp_online");
+            updateSystemStatus(true);
+          }
+          
           updateCards(data);
           updateCharts(data);
-          checkAlerts(data);
+          checkWarnings(data);
           updateLastUpdate(data.timestamp);
           
           // Auto decision logic when sensor data changes
@@ -1093,7 +1343,27 @@
       database.ref('controls').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
+          const previousAuto = autoMode;
+          const previousControls = { ...currentControls };
           autoMode = data.auto === true;
+          
+          // Notify on control changes (only if changed)
+          if (previousAuto !== autoMode) {
+            showNotification(`Auto mode ${autoMode ? 'enabled' : 'disabled'}`, autoMode ? 'info' : 'warning', 'auto_mode_change');
+          }
+          
+          // Track individual control changes
+          if (previousControls.solar !== undefined && data.solar !== previousControls.solar) {
+            showNotification(`Solar power ${data.solar ? 'enabled' : 'disabled'}`, data.solar ? 'success' : 'info', 'solar_change');
+          }
+          if (previousControls.battery !== undefined && data.battery !== previousControls.battery) {
+            showNotification(`Battery ${data.battery ? 'enabled' : 'disabled'}`, data.battery ? 'success' : 'info', 'battery_change');
+          }
+          if (previousControls.grid !== undefined && data.grid !== previousControls.grid) {
+            showNotification(`Grid power ${data.grid ? 'enabled' : 'disabled'}`, data.grid ? 'warning' : 'info', 'grid_change');
+          }
+          
+          currentControls = data;
           updateControls(data);
           
           // Track grid active time
@@ -1104,6 +1374,10 @@
           }
         }
       });
+      
+      // Initialize monitoring
+      monitorConnection();
+      monitorESPStatus();
     }
 
     // Update Dashboard Cards
@@ -1133,18 +1407,21 @@
       updateEfficiency(efficiency);
     }
 
-    // Calculate Efficiency
+    // Calculate Efficiency - REAL calculation from Firebase data
     function calculateEfficiency(data) {
       if (!data) return 0;
       const solar = data.solar || 0;
-      const battery = data.battery || 0;
-      const powerUsage = ((data.voltage || 0) * (data.current || 0) / 1000);
+      const voltage = data.voltage || 0;
+      const current = data.current || 0;
+      const power = (voltage * current) / 1000; // Power in kW
       
-      if (powerUsage === 0) return 0;
+      if (power === 0) return 0;
       
-      // Efficiency based on solar generation vs consumption
-      const efficiency = Math.min(100, Math.max(0, (solar / Math.max(powerUsage, 0.1)) * 50 + (battery / 100) * 50));
-      return Math.round(efficiency);
+      // Real efficiency: (solar generation / total power consumption) * 100
+      const efficiency = (solar / power) * 100;
+      
+      // Clamp between 0-100
+      return Math.min(100, Math.max(0, Math.round(efficiency)));
     }
 
     // Update Efficiency Bar
@@ -1296,39 +1573,33 @@
             }
           }, 100);
         }
+      }).catch((error) => {
+        showNotification(`Failed to update ${type} control`, 'error', `control_error_${type}`);
       });
     }
 
-    // Check Alerts
-    function checkAlerts(data) {
+    // Check Warnings
+    function checkWarnings(data) {
       // Battery < 20%
       if (data.battery < 20) {
         showNotification(`Low battery: ${Math.round(data.battery)}%`, 'warning', 'battery_low');
       } else {
-        // Remove alert if battery is back to normal
-        if (alertMap.has('battery_low')) {
-          const idx = alertList.findIndex(a => a.key === 'battery_low');
-          if (idx > -1) {
-            alertList.splice(idx, 1);
-            alertMap.delete('battery_low');
-            renderNotifications();
-          }
-        }
+        removeNotificationByKey('battery_low');
       }
 
       // Temperature > 45°C
       if (data.temperature > 45) {
         showNotification(`High temperature: ${Math.round(data.temperature)}°C`, 'warning', 'temp_high');
       } else {
-        // Remove alert if temperature is back to normal
-        if (alertMap.has('temp_high')) {
-          const idx = alertList.findIndex(a => a.key === 'temp_high');
-          if (idx > -1) {
-            alertList.splice(idx, 1);
-            alertMap.delete('temp_high');
-            renderNotifications();
-          }
-        }
+        removeNotificationByKey('temp_high');
+      }
+
+      // Efficiency < 50%
+      const efficiency = calculateEfficiency(data);
+      if (efficiency < 50 && efficiency > 0) {
+        showNotification(`Low efficiency: ${efficiency}%`, 'warning', 'efficiency_low');
+      } else {
+        removeNotificationByKey('efficiency_low');
       }
 
       // Grid active too long (> 2 hours)
@@ -1337,25 +1608,21 @@
         if (gridActiveDuration > 2) {
           showNotification(`Grid power active for ${gridActiveDuration.toFixed(1)} hours`, 'warning', 'grid_long');
         } else {
-          // Remove alert if grid is no longer active too long
-          if (alertMap.has('grid_long')) {
-            const idx = alertList.findIndex(a => a.key === 'grid_long');
-            if (idx > -1) {
-              alertList.splice(idx, 1);
-              alertMap.delete('grid_long');
-              renderNotifications();
-            }
-          }
+          removeNotificationByKey('grid_long');
         }
       } else {
-        // Remove alert if grid is off
-        if (alertMap.has('grid_long')) {
-          const idx = alertList.findIndex(a => a.key === 'grid_long');
-          if (idx > -1) {
-            alertList.splice(idx, 1);
-            alertMap.delete('grid_long');
-            renderNotifications();
-          }
+        removeNotificationByKey('grid_long');
+      }
+    }
+
+    // Remove notification by key
+    function removeNotificationByKey(key) {
+      if (alertMap.has(key)) {
+        const idx = alertList.findIndex(a => a.key === key);
+        if (idx > -1) {
+          alertList.splice(idx, 1);
+          alertMap.delete(key);
+          renderNotifications();
         }
       }
     }
@@ -1384,28 +1651,68 @@
     let alertList = [];
     const alertMap = new Map(); // Track alerts by key to avoid duplicates
 
+    // Professional Notification System
+    function getNotificationIcon(type) {
+      const icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle',
+        error: 'fa-times-circle'
+      };
+      return icons[type] || 'fa-bell';
+    }
+
+    function formatTime(timestamp) {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diffMs = now - time;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      
+      if (diffMins < 1) {
+        return 'Just now';
+      } else if (diffMins < 60) {
+        return `${diffMins}m ago`;
+      } else if (diffMins < 1440) {
+        return `${Math.floor(diffMins / 60)}h ago`;
+      } else {
+        return time.toLocaleDateString();
+      }
+    }
+
     function renderNotifications() {
-      // Header dropdown
       const dropdownAlerts = document.getElementById('dropdownAlerts');
       if (dropdownAlerts) {
         dropdownAlerts.innerHTML = '';
         if (alertList.length === 0) {
-          dropdownAlerts.innerHTML = '<div style="color: #888; padding: 0.5rem 0;">No notifications</div>';
+          dropdownAlerts.innerHTML = '<div style="color: #888; padding: 1rem; text-align: center;">No notifications</div>';
         } else {
           alertList.slice().reverse().forEach((alert, idx) => {
-            const div = document.createElement('div');
-            div.className = `alert ${alert.type}`;
-            // Calculate the correct index in alertList (since we reversed)
             const alertIdx = alertList.length - 1 - idx;
-            div.innerHTML = `<i class=\"fas fa-${alert.type === 'warning' ? 'exclamation-triangle' : 'check-circle'}\"></i>${alert.message}` +
-              `<button class='remove-alert-btn' data-alert-idx='${alertIdx}' style='margin-left:auto;background:none;border:none;color:#f44336;cursor:pointer;font-size:1.1em;' title='Remove' aria-label='Remove notification'>&times;</button>`;
-            dropdownAlerts.appendChild(div);
+            const item = document.createElement('div');
+            item.className = `notification-item alert ${alert.type}`;
+            if (document.body.classList.contains('dark-mode')) {
+              item.classList.add('dark-mode');
+            }
+            
+            item.innerHTML = `
+              <i class="fas ${getNotificationIcon(alert.type)} notification-icon"></i>
+              <div class="notification-content">
+                <div>${alert.message}</div>
+                <div class="notification-time">${formatTime(alert.time)}</div>
+              </div>
+              <button class="notification-remove" data-alert-idx="${alertIdx}" title="Remove">&times;</button>
+            `;
+            dropdownAlerts.appendChild(item);
           });
-          // Add Delete All link at the end if there are notifications
+          
+          // Delete All button
           const deleteAllBtn = document.createElement('button');
-          deleteAllBtn.textContent = 'Delete All';
+          deleteAllBtn.textContent = 'Clear All';
           deleteAllBtn.className = 'delete-all-link';
-          deleteAllBtn.style = 'display:block;margin:0.5rem auto 0 auto;padding:0;background:none;border:none;color:#2E7D32;text-decoration:underline;cursor:pointer;font-size:1rem;font-weight:600;text-align:center;';
+          deleteAllBtn.style.cssText = 'display:block;margin:0.5rem auto 0 auto;padding:0.5rem 1rem;background:none;border:none;color:#2E7D32;text-decoration:underline;cursor:pointer;font-size:0.9rem;font-weight:600;text-align:center;border-radius:6px;transition:background 0.2s;';
+          deleteAllBtn.onmouseover = function() { this.style.background = 'rgba(0,0,0,0.05)'; };
+          deleteAllBtn.onmouseout = function() { this.style.background = 'none'; };
           deleteAllBtn.onclick = function(e) {
             e.stopPropagation();
             alertList = [];
@@ -1415,38 +1722,45 @@
           dropdownAlerts.appendChild(deleteAllBtn);
         }
       }
-      // Header badge
+      
+      // Update badge
       const badge = document.getElementById('notificationBadge');
       if (badge) {
-        if (alertList.length > 0) {
-          badge.textContent = alertList.length;
+        const warningCount = alertList.filter(a => a.type === 'warning' || a.type === 'error').length;
+        if (warningCount > 0) {
+          badge.textContent = warningCount;
           badge.style.display = 'inline-block';
         } else {
           badge.style.display = 'none';
         }
       }
+      
       // Sidebar badge
       const sidebarItems = document.querySelectorAll('.nav-item');
       sidebarItems.forEach(item => {
         const span = item.querySelector('span');
         if (span && span.textContent.trim() === 'Notifications') {
-          let badge = item.querySelector('.sidebar-badge');
-          if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'sidebar-badge';
-            span.parentNode.appendChild(badge);
+          let sidebarBadge = item.querySelector('.sidebar-badge');
+          if (!sidebarBadge) {
+            sidebarBadge = document.createElement('span');
+            sidebarBadge.className = 'sidebar-badge';
+            sidebarBadge.style.cssText = 'position:absolute;right:1rem;background:#f44336;color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;';
+            item.style.position = 'relative';
+            span.parentNode.appendChild(sidebarBadge);
           }
-          if (alertList.length > 0) {
-            badge.textContent = alertList.length;
-            badge.style.display = 'inline-block';
+          const warningCount = alertList.filter(a => a.type === 'warning' || a.type === 'error').length;
+          if (warningCount > 0) {
+            sidebarBadge.textContent = warningCount;
+            sidebarBadge.style.display = 'inline-block';
           } else {
-            badge.style.display = 'none';
+            sidebarBadge.style.display = 'none';
           }
         }
       });
-      // Add event listeners for remove buttons
+      
+      // Add remove button listeners
       if (dropdownAlerts) {
-        dropdownAlerts.querySelectorAll('.remove-alert-btn').forEach(btn => {
+        dropdownAlerts.querySelectorAll('.notification-remove').forEach(btn => {
           btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const idx = parseInt(this.getAttribute('data-alert-idx'));
@@ -1462,43 +1776,56 @@
       }
     }
 
-    function showNotification(message, type, key = null) {
-      // Use key to prevent duplicate alerts
+    function showNotification(message, type = 'info', key = null) {
+      // Prevent duplicates if key provided
       if (key && alertMap.has(key)) {
-        return; // Alert already exists
+        // Update existing notification time
+        const existing = alertList.find(a => a.key === key);
+        if (existing) {
+          existing.time = new Date();
+          renderNotifications();
+        }
+        return;
       }
 
-      const alert = { message, type, time: new Date(), key: key || message };
+      const alert = { 
+        message, 
+        type, 
+        time: new Date(), 
+        key: key || `${message}_${type}_${Date.now()}` 
+      };
+      
       alertList.push(alert);
       if (key) {
         alertMap.set(key, alert);
       }
+      
       renderNotifications();
       
-      // Show in system status alerts area
-      const alertsContainer = document.getElementById('alertsContainer');
-      if (alertsContainer) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert ${type}`;
-        alertDiv.innerHTML = `<i class=\"fas fa-${type === 'warning' ? 'exclamation-triangle' : 'check-circle'}\"></i>${message}`;
-        alertsContainer.prepend(alertDiv);
+      // Auto-dismiss success and info messages (not warnings/errors)
+      if (type === 'success' || type === 'info') {
         setTimeout(() => {
-          alertDiv.remove();
-          // Remove from alertList if still exists
-          const idx = alertList.findIndex(a => a.message === message && a.type === type);
+          const idx = alertList.findIndex(a => a.key === alert.key);
           if (idx > -1) {
-            const removed = alertList.splice(idx, 1)[0];
-            if (removed && removed.key) {
-              alertMap.delete(removed.key);
-            }
+            alertList.splice(idx, 1);
+            if (key) alertMap.delete(key);
             renderNotifications();
           }
         }, 5000);
       }
-    }
-
-    function showAlert(message, type) {
-      showNotification(message, type);
+      
+      // Show in alerts container
+      const alertsContainer = document.getElementById('alertsContainer');
+      if (alertsContainer && (type === 'warning' || type === 'error')) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert ${type}`;
+        if (document.body.classList.contains('dark-mode')) {
+          alertDiv.classList.add('dark-mode');
+        }
+        alertDiv.innerHTML = `<i class="fas ${getNotificationIcon(type)}"></i>${message}`;
+        alertsContainer.prepend(alertDiv);
+        setTimeout(() => alertDiv.remove(), 8000);
+      }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1854,32 +2181,62 @@
       showNotification(`Showing ${timeframe} analytics data`, 'success');
     }
 
-    // Dark Mode Toggle
+    // Premium Dark Mode Toggle
     const darkModeBtn = document.getElementById('darkModeToggle');
     function setDarkMode(active) {
       document.body.classList.toggle('dark-mode', active);
-      document.querySelectorAll('.dashboard, .sidebar, .header, .main-content, .card, .system-status, .chart-card, .status-card, .analytics-card, .nav-item, .stat-item, .quick-actions, .efficiency-meter, .progress-bar, .alert').forEach(el => {
+      
+      // Apply dark mode to all elements
+      const elementsToToggle = document.querySelectorAll('.dashboard, .sidebar, .header, .main-content, .card, .system-status, .chart-card, .status-card, .analytics-card, .nav-item, .stat-item, .quick-actions, .efficiency-meter, .progress-bar, .alert, .notification-dropdown, .dropdown-header, .control-btn, .action-btn, .notification-item');
+      elementsToToggle.forEach(el => {
         if (el) el.classList.toggle('dark-mode', active);
       });
-      // Change icon
-      const icon = darkModeBtn.querySelector('i');
+      
+      // Update chart colors for dark mode
+      if (powerChart) {
+        const isDark = document.body.classList.contains('dark-mode');
+        powerChart.updateOptions({
+          theme: { mode: isDark ? 'dark' : 'light' },
+          xaxis: {
+            labels: {
+              style: {
+                colors: isDark ? '#e4e6eb' : '#333333'
+              }
+            }
+          },
+          yaxis: {
+            labels: {
+              style: {
+                colors: isDark ? '#e4e6eb' : '#333333'
+              }
+            }
+          }
+        });
+      }
+      
+      // Change icon and text
       if (active) {
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
         darkModeBtn.innerHTML = '<i class="fas fa-sun"></i> Light Mode';
       } else {
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
         darkModeBtn.innerHTML = '<i class="fas fa-moon"></i> Dark Mode';
       }
+      
+      // Re-render notifications to apply dark mode
+      renderNotifications();
     }
+    
     // Persist dark mode state
-    if (localStorage.getItem('darkMode') === 'true') setDarkMode(true);
-    darkModeBtn.addEventListener('click', function() {
-      const isDark = !document.body.classList.contains('dark-mode');
-      setDarkMode(isDark);
-      localStorage.setItem('darkMode', isDark);
-    });
+    if (localStorage.getItem('darkMode') === 'true') {
+      setDarkMode(true);
+    }
+    
+    if (darkModeBtn) {
+      darkModeBtn.addEventListener('click', function() {
+        const isDark = !document.body.classList.contains('dark-mode');
+        setDarkMode(isDark);
+        localStorage.setItem('darkMode', isDark);
+      });
+    }
 
     // Add navigation handling
     document.addEventListener('DOMContentLoaded', function() {
