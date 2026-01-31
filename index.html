@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>⚡ REMS Cloud Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+
+<body>
+
+<h1>⚡ REMS Energy Dashboard</h1>
+
+<!-- ================= SENSOR CARDS ================= -->
+<div class="grid">
+
+  <div class="card"><h2>Voltage</h2><p id="voltage">--</p></div>
+  <div class="card"><h2>Current</h2><p id="current">--</p></div>
+  <div class="card"><h2>Battery</h2><p id="battery">--</p></div>
+  <div class="card"><h2>Temperature</h2><p id="temperature">--</p></div>
+  <div class="card"><h2>Solar</h2><p id="solar">--</p></div>
+  <div class="card"><h2>Efficiency</h2><p id="efficiency">--</p></div>
+
+</div>
+
+
+<!-- ================= CONTROLS ================= -->
+<h2 style="margin-top:40px;">Controls</h2>
+
+<div class="controls">
+
+  <label class="switch">
+    Grid
+    <input type="checkbox" id="grid">
+  </label>
+
+  <label class="switch">
+    Solar
+    <input type="checkbox" id="solarCtrl">
+  </label>
+
+  <label class="switch">
+    Battery
+    <input type="checkbox" id="batteryCtrl">
+  </label>
+
+  <label class="switch">
+    Auto Mode
+    <input type="checkbox" id="auto">
+  </label>
+
+</div>
+
+</body>
+</html>
