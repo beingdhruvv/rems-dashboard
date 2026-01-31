@@ -7,6 +7,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Roboto:wght@300;500&family=Orbitron:wght@500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
     :root {
       --primary: #2E7D32;
@@ -942,13 +944,63 @@
   </div>
 
   <script>
+    // Firebase Configuration - REPLACE WITH YOUR FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJmAxim4X0McfWy80W3SMwRfxK46bHZ7g",
+      authDomain: "rems-dashboard.firebaseapp.com",
+      databaseURL: "https://rems-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "rems-dashboard",
+      storageBucket: "rems-dashboard.firebasestorage.app",
+      messagingSenderId: "89739980249",
+      appId: "1:89739980249:web:7920673b22550b6d9c7dc8"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Global Variables
+    let powerChart;
+    let autoMode = true; // Auto mode ON by default
+    let gridActiveStartTime = null;
+    let firebaseConnected = true;
+    let currentSensorData = {};
+    let chartData = {
+      timestamps: [],
+      solar: [],
+      battery: [],
+      consumption: []
+    };
+
+    // Initialize Firebase connection monitoring
+    const connectedRef = database.ref(".info/connected");
+    connectedRef.on("value", function(snap) {
+      const wasConnected = firebaseConnected;
+      firebaseConnected = snap.val() === true;
+      
+      if (!firebaseConnected && wasConnected) {
+        showNotification("Firebase connection lost", "warning", "firebase_disconnected");
+      } else if (firebaseConnected && !wasConnected) {
+        showNotification("Firebase reconnected", "success", "firebase_reconnected");
+        // Remove disconnected alert if exists
+        if (alertMap.has('firebase_disconnected')) {
+          const idx = alertList.findIndex(a => a.key === 'firebase_disconnected');
+          if (idx > -1) {
+            alertList.splice(idx, 1);
+            alertMap.delete('firebase_disconnected');
+            renderNotifications();
+          }
+        }
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
       // Power Consumption Chart
       const options = {
         series: [
-          { name: "Solar Generation (kWh)", data: [40, 50, 55, 48, 60, 70] },
-          { name: "Battery Storage (kWh)", data: [20, 30, 28, 35, 40, 50] },
-          { name: "Energy Consumption (kWh)", data: [60, 65, 70, 75, 85, 90] }
+          { name: "Solar Generation (kWh)", data: [] },
+          { name: "Battery Storage (kWh)", data: [] },
+          { name: "Energy Consumption (kWh)", data: [] }
         ],
         chart: {
           type: "area",
@@ -970,7 +1022,7 @@
           }
         },
         xaxis: { 
-          categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          categories: [],
           labels: {
             style: {
               colors: 'var(--text)',
@@ -1000,149 +1052,337 @@
       };
 
       // Initialize the power consumption chart
-      const powerChart = new ApexCharts(document.querySelector("#graph"), options);
+      powerChart = new ApexCharts(document.querySelector("#graph"), options);
       powerChart.render();
 
-      // Temperature Gauge
-      const tempOptions = {
-        series: [24],
-        chart: {
-          type: 'radialBar',
-          height: 300,
-          fontFamily: 'Quicksand, sans-serif',
-        },
-        plotOptions: {
-          radialBar: {
-            startAngle: -135,
-            endAngle: 135,
-            hollow: {
-              margin: 15,
-              size: '70%'
-            },
-            track: {
-              background: '#f2f2f2',
-              strokeWidth: '97%',
-              margin: 5,
-              dropShadow: {
-                enabled: true,
-                top: 2,
-                left: 0,
-                blur: 4,
-                opacity: 0.15
-              }
-            },
-            dataLabels: {
-              name: {
-                offsetY: -10,
-                color: '#888',
-                fontSize: '17px',
-                fontFamily: 'Quicksand, sans-serif',
-              },
-              value: {
-                color: '#111',
-                fontSize: '36px',
-                fontWeight: 600,
-                formatter: function(val) {
-                  return val + '°C';
-                }
-              }
-            }
-          }
-        },
-        fill: {
-          type: 'gradient',
-          gradient: {
-            shade: 'dark',
-            type: 'horizontal',
-            shadeIntensity: 0.5,
-            gradientToColors: ['var(--gradient-end)'],
-            inverseColors: true,
-            opacityFrom: 1,
-            opacityTo: 1,
-            stops: [0, 100]
-          }
-        },
-        stroke: {
-          lineCap: 'round'
-        },
-        labels: ['Temperature']
-      };
+      // Setup Firebase Realtime Listeners
+      setupFirebaseListeners();
 
-      // Initialize temperature gauge
-      const tempChart = new ApexCharts(document.querySelector("#tempGauge"), tempOptions);
-      tempChart.render();
+      // Initialize Auto Mode ON by default (after a short delay to ensure Firebase is ready)
+      setTimeout(() => {
+        database.ref('controls/auto').once('value', (snapshot) => {
+          const currentAuto = snapshot.val();
+          if (currentAuto === null || currentAuto === undefined) {
+            // Auto mode not set, initialize to true
+            sendControl('auto', true);
+          }
+        });
+      }, 500);
     });
 
-    // System Control Functions
-    let autoMode = false;
-    const controls = {
-      solar: false,
-      battery: false,
-      grid: false
-    };
+    // Firebase Realtime Listeners
+    function setupFirebaseListeners() {
+      // Listen to sensorData
+      database.ref('sensorData').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          currentSensorData = data;
+          updateCards(data);
+          updateCharts(data);
+          checkAlerts(data);
+          updateLastUpdate(data.timestamp);
+          
+          // Auto decision logic when sensor data changes
+          if (autoMode) {
+            autoDecisionLogic(data);
+          }
+        }
+      });
 
+      // Listen to controls
+      database.ref('controls').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          autoMode = data.auto === true;
+          updateControls(data);
+          
+          // Track grid active time
+          if (data.grid === true && !gridActiveStartTime) {
+            gridActiveStartTime = Date.now();
+          } else if (data.grid === false) {
+            gridActiveStartTime = null;
+          }
+        }
+      });
+    }
+
+    // Update Dashboard Cards
+    function updateCards(data) {
+      // Solar Generation
+      const solarValue = (data.solar || 0).toFixed(1);
+      const solarCard = document.querySelector('.stat-item:nth-child(1) .value');
+      if (solarCard) solarCard.textContent = solarValue + ' kW';
+
+      // Battery Level
+      const batteryValue = Math.round(data.battery || 0);
+      const batteryCard = document.querySelector('.stat-item:nth-child(2) .value');
+      if (batteryCard) batteryCard.textContent = batteryValue + '%';
+
+      // Power Usage (voltage * current / 1000)
+      const powerUsage = ((data.voltage || 0) * (data.current || 0) / 1000).toFixed(1);
+      const powerCard = document.querySelector('.stat-item:nth-child(3) .value');
+      if (powerCard) powerCard.textContent = powerUsage + ' kW';
+
+      // Temperature
+      const tempValue = Math.round(data.temperature || 0);
+      const tempCard = document.querySelector('.stat-item:nth-child(4) .value');
+      if (tempCard) tempCard.textContent = tempValue + '°C';
+
+      // Update Efficiency
+      const efficiency = calculateEfficiency(data);
+      updateEfficiency(efficiency);
+    }
+
+    // Calculate Efficiency
+    function calculateEfficiency(data) {
+      if (!data) return 0;
+      const solar = data.solar || 0;
+      const battery = data.battery || 0;
+      const powerUsage = ((data.voltage || 0) * (data.current || 0) / 1000);
+      
+      if (powerUsage === 0) return 0;
+      
+      // Efficiency based on solar generation vs consumption
+      const efficiency = Math.min(100, Math.max(0, (solar / Math.max(powerUsage, 0.1)) * 50 + (battery / 100) * 50));
+      return Math.round(efficiency);
+    }
+
+    // Update Efficiency Bar
+    function updateEfficiency(efficiency) {
+      const efficiencyBar = document.getElementById('efficiencyBar');
+      const efficiencyValue = document.querySelector('.efficiency-value');
+      if (efficiencyBar) efficiencyBar.style.width = `${efficiency}%`;
+      if (efficiencyValue) efficiencyValue.textContent = `${efficiency}%`;
+    }
+
+    // Update Charts
+    function updateCharts(data) {
+      if (!powerChart || !data) return;
+
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      
+      // Add new data point
+      chartData.timestamps.push(timeLabel);
+      chartData.solar.push(data.solar || 0);
+      chartData.battery.push((data.battery || 0) / 10); // Scale battery % to kWh range
+      chartData.consumption.push(((data.voltage || 0) * (data.current || 0) / 1000));
+
+      // Keep only last 20 data points
+      if (chartData.timestamps.length > 20) {
+        chartData.timestamps.shift();
+        chartData.solar.shift();
+        chartData.battery.shift();
+        chartData.consumption.shift();
+      }
+
+      // Update chart only if we have data
+      if (chartData.timestamps.length > 0) {
+        try {
+          powerChart.updateOptions({
+            xaxis: { categories: chartData.timestamps }
+          });
+          powerChart.updateSeries([
+            { name: "Solar Generation (kWh)", data: chartData.solar },
+            { name: "Battery Storage (kWh)", data: chartData.battery },
+            { name: "Energy Consumption (kWh)", data: chartData.consumption }
+          ]);
+        } catch (e) {
+          console.error('Chart update error:', e);
+        }
+      }
+    }
+
+    // Update Controls UI
+    function updateControls(data) {
+      const controls = ['solar', 'battery', 'grid', 'auto'];
+      controls.forEach(type => {
+        const btn = document.getElementById(`${type}Btn`);
+        if (btn) {
+          const indicator = btn.querySelector('.status-indicator');
+          const isActive = data[type] === true;
+          
+          if (isActive) {
+            btn.classList.add('active');
+            if (indicator) indicator.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+            if (indicator) indicator.classList.remove('active');
+          }
+
+          // Disable manual buttons when auto mode is ON
+          if (type !== 'auto' && autoMode) {
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+          }
+        }
+      });
+    }
+
+    // Auto Decision Logic
+    let lastAutoDecision = null;
+    let autoDecisionTimeout = null;
+    function autoDecisionLogic(data) {
+      if (!autoMode) return;
+
+      // Debounce auto decisions to prevent too frequent updates
+      if (autoDecisionTimeout) {
+        clearTimeout(autoDecisionTimeout);
+      }
+
+      autoDecisionTimeout = setTimeout(() => {
+        const solar = data.solar || 0;
+        const battery = data.battery || 0;
+        
+        let decision = {
+          solar: false,
+          battery: false,
+          grid: false
+        };
+
+        if (solar > 2) {
+          decision.solar = true;
+        } else if (battery > 30) {
+          decision.battery = true;
+        } else {
+          decision.grid = true;
+        }
+
+        // Only update if decision changed
+        const decisionKey = `${decision.solar}-${decision.battery}-${decision.grid}`;
+        if (lastAutoDecision !== decisionKey) {
+          lastAutoDecision = decisionKey;
+          decision.auto = true;
+          database.ref('controls').update(decision);
+        }
+      }, 500); // 500ms debounce
+    }
+
+    // System Control Functions
     function toggleControl(type) {
       if (autoMode && type !== 'auto') {
-        showAlert('Warning: Disable Auto Mode first', 'warning');
+        showNotification('Warning: Disable Auto Mode first', 'warning');
         return;
       }
       
-      controls[type] = !controls[type];
-      updateControlUI(type);
-      updateEfficiency();
+      database.ref('controls').once('value', (snapshot) => {
+        const current = snapshot.val() || {};
+        const newValue = !current[type];
+        sendControl(type, newValue);
+      });
     }
 
     function toggleAutoMode() {
-      autoMode = !autoMode;
-      document.getElementById('autoBtn').classList.toggle('active');
-      document.querySelector('#autoBtn .status-indicator').classList.toggle('active');
-      
-      if (autoMode) {
-        optimizeEnergy();
-        showAlert('Auto Mode Enabled', 'success');
-      }
+      database.ref('controls/auto').once('value', (snapshot) => {
+        const currentAuto = snapshot.val() === true;
+        sendControl('auto', !currentAuto);
+      });
     }
 
-    function updateControlUI(type) {
-      const btn = document.getElementById(`${type}Btn`);
-      const indicator = btn.querySelector('.status-indicator');
+    // Send Control to Firebase
+    function sendControl(type, value) {
+      const updates = {};
+      updates[type] = value;
       
-      if (controls[type]) {
-        btn.classList.add('active');
-        indicator.classList.add('active');
+      database.ref('controls').update(updates).then(() => {
+        // If turning on auto mode, run decision logic after update
+        if (type === 'auto' && value === true) {
+          setTimeout(() => {
+            if (currentSensorData && Object.keys(currentSensorData).length > 0) {
+              autoDecisionLogic(currentSensorData);
+            }
+          }, 100);
+        }
+      });
+    }
+
+    // Check Alerts
+    function checkAlerts(data) {
+      // Battery < 20%
+      if (data.battery < 20) {
+        showNotification(`Low battery: ${Math.round(data.battery)}%`, 'warning', 'battery_low');
       } else {
-        btn.classList.remove('active');
-        indicator.classList.remove('active');
+        // Remove alert if battery is back to normal
+        if (alertMap.has('battery_low')) {
+          const idx = alertList.findIndex(a => a.key === 'battery_low');
+          if (idx > -1) {
+            alertList.splice(idx, 1);
+            alertMap.delete('battery_low');
+            renderNotifications();
+          }
+        }
+      }
+
+      // Temperature > 45°C
+      if (data.temperature > 45) {
+        showNotification(`High temperature: ${Math.round(data.temperature)}°C`, 'warning', 'temp_high');
+      } else {
+        // Remove alert if temperature is back to normal
+        if (alertMap.has('temp_high')) {
+          const idx = alertList.findIndex(a => a.key === 'temp_high');
+          if (idx > -1) {
+            alertList.splice(idx, 1);
+            alertMap.delete('temp_high');
+            renderNotifications();
+          }
+        }
+      }
+
+      // Grid active too long (> 2 hours)
+      if (gridActiveStartTime) {
+        const gridActiveDuration = (Date.now() - gridActiveStartTime) / (1000 * 60 * 60); // hours
+        if (gridActiveDuration > 2) {
+          showNotification(`Grid power active for ${gridActiveDuration.toFixed(1)} hours`, 'warning', 'grid_long');
+        } else {
+          // Remove alert if grid is no longer active too long
+          if (alertMap.has('grid_long')) {
+            const idx = alertList.findIndex(a => a.key === 'grid_long');
+            if (idx > -1) {
+              alertList.splice(idx, 1);
+              alertMap.delete('grid_long');
+              renderNotifications();
+            }
+          }
+        }
+      } else {
+        // Remove alert if grid is off
+        if (alertMap.has('grid_long')) {
+          const idx = alertList.findIndex(a => a.key === 'grid_long');
+          if (idx > -1) {
+            alertList.splice(idx, 1);
+            alertMap.delete('grid_long');
+            renderNotifications();
+          }
+        }
       }
     }
 
-    function updateEfficiency() {
-      const efficiency = calculateEfficiency();
-      document.getElementById('efficiencyBar').style.width = `${efficiency}%`;
-      document.querySelector('.efficiency-value').textContent = `${efficiency}%`;
-    }
-
-    function calculateEfficiency() {
-      // Simplified efficiency calculation
-      return Math.floor(Math.random() * 30 + 70); // Returns 70-100
-    }
-
-    function optimizeEnergy() {
-      if (!autoMode) return;
+    // Update Last Update Time
+    function updateLastUpdate(timestamp) {
+      if (!timestamp) return;
       
-      // Simulate energy optimization logic
-      const hour = new Date().getHours();
-      const isSunlight = hour >= 6 && hour <= 18;
+      const updateTime = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - updateTime;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
       
-      controls.solar = isSunlight;
-      controls.battery = !isSunlight;
-      controls.grid = false;
+      let timeStr = 'Just now';
+      if (diffMins > 0) {
+        timeStr = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+      } else if (diffSecs > 0) {
+        timeStr = `${diffSecs} sec${diffSecs > 1 ? 's' : ''} ago`;
+      }
       
-      Object.keys(controls).forEach(updateControlUI);
-      updateEfficiency();
+      const lastUpdateEl = document.getElementById('lastUpdate');
+      if (lastUpdateEl) lastUpdateEl.textContent = timeStr;
     }
 
     let alertList = [];
+    const alertMap = new Map(); // Track alerts by key to avoid duplicates
 
     function renderNotifications() {
       // Header dropdown
@@ -1169,6 +1409,7 @@
           deleteAllBtn.onclick = function(e) {
             e.stopPropagation();
             alertList = [];
+            alertMap.clear();
             renderNotifications();
           };
           dropdownAlerts.appendChild(deleteAllBtn);
@@ -1209,8 +1450,11 @@
           btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const idx = parseInt(this.getAttribute('data-alert-idx'));
-            if (!isNaN(idx)) {
-              alertList.splice(idx, 1);
+            if (!isNaN(idx) && idx < alertList.length) {
+              const removed = alertList.splice(idx, 1)[0];
+              if (removed && removed.key) {
+                alertMap.delete(removed.key);
+              }
               renderNotifications();
             }
           });
@@ -1218,18 +1462,43 @@
       }
     }
 
-    function showAlert(message, type) {
-      alertList.push({ message, type, time: new Date() });
+    function showNotification(message, type, key = null) {
+      // Use key to prevent duplicate alerts
+      if (key && alertMap.has(key)) {
+        return; // Alert already exists
+      }
+
+      const alert = { message, type, time: new Date(), key: key || message };
+      alertList.push(alert);
+      if (key) {
+        alertMap.set(key, alert);
+      }
       renderNotifications();
-      // Show in system status alerts area as before
+      
+      // Show in system status alerts area
       const alertsContainer = document.getElementById('alertsContainer');
       if (alertsContainer) {
-        const alert = document.createElement('div');
-        alert.className = `alert ${type}`;
-        alert.innerHTML = `<i class=\"fas fa-${type === 'warning' ? 'exclamation-triangle' : 'check-circle'}\"></i>${message}`;
-        alertsContainer.prepend(alert);
-        setTimeout(() => alert.remove(), 5000);
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert ${type}`;
+        alertDiv.innerHTML = `<i class=\"fas fa-${type === 'warning' ? 'exclamation-triangle' : 'check-circle'}\"></i>${message}`;
+        alertsContainer.prepend(alertDiv);
+        setTimeout(() => {
+          alertDiv.remove();
+          // Remove from alertList if still exists
+          const idx = alertList.findIndex(a => a.message === message && a.type === type);
+          if (idx > -1) {
+            const removed = alertList.splice(idx, 1)[0];
+            if (removed && removed.key) {
+              alertMap.delete(removed.key);
+            }
+            renderNotifications();
+          }
+        }, 5000);
       }
+    }
+
+    function showAlert(message, type) {
+      showNotification(message, type);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1582,7 +1851,7 @@
       // Update Cost Chart
       costChart.updateSeries(data.cost.map(item => item.y));
       
-      showAlert(`Showing ${timeframe} analytics data`, 'success');
+      showNotification(`Showing ${timeframe} analytics data`, 'success');
     }
 
     // Dark Mode Toggle
