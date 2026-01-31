@@ -13,10 +13,10 @@ import {
 
 // ================= YOUR CONFIG =================
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  apiKey: "AIzaSyAJmAxim4X0McfWy80W3SMwRfxK46bHZ7g",
+  authDomain: "rems-dashboard.firebaseapp.com",
   databaseURL: "https://rems-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "YOUR_PROJECT_ID"
+  projectId: "rems-dashboard"
 };
 
 
@@ -74,3 +74,4 @@ grid.onchange = () => updateControl("grid", grid.checked);
 solarCtrl.onchange = () => updateControl("solar", solarCtrl.checked);
 batteryCtrl.onchange = () => updateControl("battery", batteryCtrl.checked);
 auto.onchange = () => updateControl("auto", auto.checked);
+
