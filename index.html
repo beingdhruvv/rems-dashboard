@@ -1,4 +1,3 @@
-<!--Full Dynamic Working REMS Dashboard-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -622,6 +621,7 @@
       width: 100%;
       position: relative;
       padding-right: 3rem;
+      opacity: 0.6;
     }
 
     .control-btn i {
@@ -657,32 +657,37 @@
       box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
     }
 
-    .control-btn:hover:not(:disabled) {
-      background: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-    }
-
     .control-btn.active {
       background: var(--primary);
       box-shadow: 0 4px 16px rgba(46, 125, 50, 0.5), 0 0 20px rgba(46, 125, 50, 0.3);
-      transform: scale(1.02);
       opacity: 1 !important;
+      transform: scale(1.02);
     }
 
-    .control-btn:not(.active) {
-      opacity: 0.6;
+    .control-btn:hover:not(:disabled):not(.active) {
+      background: var(--secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(129, 199, 132, 0.3);
+      opacity: 0.8;
+    }
+
+    .control-btn:hover:not(:disabled).active {
+      background: var(--primary);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(46, 125, 50, 0.5), 0 0 25px rgba(46, 125, 50, 0.4);
     }
 
     .control-btn:disabled {
       opacity: 0.4;
       cursor: not-allowed;
       transform: none;
+      background: var(--secondary);
     }
 
     .control-btn:disabled:hover {
       transform: none;
       box-shadow: none;
+      background: var(--secondary);
     }
 
     .status-info {
@@ -1041,8 +1046,9 @@
     .profile-content.active {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-auto-rows: minmax(auto, max-content);
-      align-items: start;
+      grid-auto-rows: 1fr;
+      align-items: stretch;
+      gap: 24px;
     }
 
     .settings-content.active {
@@ -1058,9 +1064,10 @@
     .profile-card, .settings-card, .notifications-card {
       background: var(--card-bg);
       border-radius: 20px;
-      padding: 2rem;
+      padding: 2.5rem;
       box-shadow: var(--shadow);
-      height: fit-content;
+      display: flex;
+      flex-direction: column;
     }
 
     .profile-card.full-width {
@@ -1068,61 +1075,62 @@
     }
 
     .user-avatar {
-      width: 120px;
-      height: 120px;
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3rem;
+      font-size: 3.5rem;
       color: white;
-      margin: 0 auto 1.5rem;
+      margin: 0 auto 2rem;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     .user-info-card {
       text-align: center;
-      padding: 1.75rem;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      height: fit-content;
+      height: 100%;
+      min-height: 500px;
     }
 
     .user-info-card h3 {
       color: var(--primary);
-      margin-bottom: 0.5rem;
-      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 2rem;
       font-weight: 600;
     }
 
     .user-info-card .role {
       color: var(--text);
       opacity: 0.8;
-      margin-bottom: 1rem;
-      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
       font-weight: 500;
     }
 
     .user-info-card .email {
       color: var(--text);
-      margin-bottom: 0.5rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.05rem;
     }
 
     .user-info-card .phone {
       color: var(--text);
       opacity: 0.8;
-      margin-bottom: 0.5rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.05rem;
     }
 
     .user-info-card .location {
       color: var(--text);
       opacity: 0.8;
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      font-size: 1.05rem;
     }
 
     .user-info-card .info-row {
@@ -1130,8 +1138,8 @@
       align-items: center;
       justify-content: center;
       gap: 0.75rem;
-      margin-bottom: 0.6rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
       color: var(--text);
       opacity: 0.85;
       text-align: left;
@@ -1140,17 +1148,17 @@
     .user-info-card .info-row i {
       width: 24px;
       color: var(--primary);
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       flex-shrink: 0;
     }
 
     .role-badge {
       display: inline-block;
-      padding: 0.4rem 1rem;
+      padding: 0.5rem 1.25rem;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
     }
 
     .role-badge.admin {
@@ -1166,15 +1174,18 @@
     .system-info-card {
       background: var(--card-bg);
       border-radius: 20px;
-      padding: 2rem;
+      padding: 2.5rem;
       box-shadow: var(--shadow);
-      height: fit-content;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 500px;
     }
 
     .system-info-card h4 {
       color: var(--primary);
-      margin-bottom: 1.25rem;
-      font-size: 1.3rem;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -1185,13 +1196,14 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
+      flex: 1;
     }
 
     .system-info-item {
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 1rem;
+      padding: 1.25rem;
       background: var(--bg);
       border-radius: 12px;
       transition: transform 0.2s, box-shadow 0.2s;
@@ -1203,21 +1215,21 @@
     }
 
     .system-info-item i {
-      width: 32px;
+      width: 36px;
       color: var(--primary);
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       flex-shrink: 0;
     }
 
     .system-info-item .info-label {
-      font-size: 0.95rem;
+      font-size: 1rem;
       color: var(--text);
       opacity: 0.7;
       margin-bottom: 0.5rem;
     }
 
     .system-info-item .info-value {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       color: var(--text);
       font-weight: 600;
     }
@@ -1381,6 +1393,28 @@
 
     .profile-card.dark-mode, .settings-card.dark-mode, .notifications-card.dark-mode {
       background: #1b1f27;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .user-info-card.dark-mode {
+      background: #1b1f27;
+    }
+
+    .user-info-card.dark-mode .role,
+    .user-info-card.dark-mode .email,
+    .user-info-card.dark-mode .phone,
+    .user-info-card.dark-mode .location,
+    .user-info-card.dark-mode .info-row {
+      color: #e4e6eb;
+    }
+
+    .system-info-card.dark-mode h4 {
+      color: #4CAF50;
+    }
+
+    .system-info-item.dark-mode .info-label,
+    .system-info-item.dark-mode .info-value {
+      color: #e4e6eb;
     }
 
     /* Notifications Page Styles */
@@ -1493,6 +1527,30 @@
 
     .settings-section.dark-mode h3 {
       color: #4CAF50;
+    }
+
+    .settings-card.dark-mode h2 {
+      color: #4CAF50;
+    }
+
+    .setting-item.dark-mode .setting-label span:first-child {
+      color: #e4e6eb;
+    }
+
+    .setting-item.dark-mode .setting-label span:last-child {
+      color: #b0b3b8;
+    }
+
+    .notifications-card.dark-mode h2 {
+      color: #4CAF50;
+    }
+
+    .notification-log-item.dark-mode .notification-log-message {
+      color: #e4e6eb;
+    }
+
+    .notification-log-item.dark-mode .notification-log-time {
+      color: #b0b3b8;
     }
   </style>
 </head>
@@ -1828,6 +1886,10 @@
       // Initialize Solar Card Toggle
       initSolarCardToggle();
 
+      // Initialize control buttons state (disabled if auto mode is on)
+      const initialControls = { auto: true, solar: false, battery: false, grid: false };
+      updateControls(initialControls);
+
       // Show startup notifications
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
@@ -1854,19 +1916,21 @@
           const controls = snapshot.val() || {};
           if (controls.auto === null || controls.auto === undefined) {
             // Auto mode not set, initialize to true with all others false
+            autoMode = true;
             database.ref('controls').set({
               auto: true,
               solar: false,
               battery: false,
               grid: false
+            }).then(() => {
+              // Update UI immediately after setting
+              updateControls({ auto: true, solar: false, battery: false, grid: false });
             });
           } else {
             // Ensure auto mode state is correct
             autoMode = controls.auto === true;
-            if (autoMode) {
-              // If auto is on, disable manual controls
-              updateControls(controls);
-            }
+            // Update UI with current controls state
+            updateControls(controls);
           }
           const now4 = new Date();
           const timeStr4 = `${String(now4.getHours()).padStart(2, '0')}:${String(now4.getMinutes()).padStart(2, '0')}:${String(now4.getSeconds()).padStart(2, '0')}`;
@@ -1976,9 +2040,12 @@
       const batteryCard = document.querySelector('.stat-item:nth-child(2) .value');
       if (batteryCard) batteryCard.textContent = batteryValue + '%';
 
-      // Power Usage - fixed to 0.0
+      // Power Usage - dynamic from Firebase (voltage * current)
+      const voltage = data.voltage || 0;
+      const current = data.current || 0;
+      const powerUsage = (voltage * current) / 1000; // Convert to kW
       const powerCard = document.querySelector('.stat-item:nth-child(3) .value');
-      if (powerCard) powerCard.textContent = '0.0 kW';
+      if (powerCard) powerCard.textContent = powerUsage.toFixed(1) + ' kW';
 
       // Temperature - dynamic from Firebase
       const tempValue = Math.round(data.temperature || 0);
@@ -2076,12 +2143,16 @@
             btn.disabled = true;
             btn.style.cursor = 'not-allowed';
             btn.style.opacity = '0.4';
+            btn.style.pointerEvents = 'none';
           } else {
             btn.disabled = false;
             btn.style.cursor = 'pointer';
+            btn.style.pointerEvents = 'auto';
             // In manual mode, inactive buttons are dimmer
             if (type !== 'auto' && !autoMode && !isActive) {
               btn.style.opacity = '0.6';
+            } else if (type === 'auto' || isActive) {
+              btn.style.opacity = '1';
             }
           }
         }
