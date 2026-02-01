@@ -2102,25 +2102,11 @@
       const now = new Date();
       const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       
-      // Calculate power consumption with fallback
-      const voltage = data.voltage || 0;
-      const current = data.current || 0;
-      const calculatedPower = (voltage * current) / 1000; // Convert to kW
-      const staticFallback = 2.8; // Static fallback value
-      
-      // Use dynamic value if valid (not 0, not NaN, not undefined), otherwise use fallback
-      let powerConsumption = calculatedPower;
-      if (!data.voltage || !data.current || 
-          isNaN(calculatedPower) || calculatedPower === 0 || 
-          !isFinite(calculatedPower)) {
-        powerConsumption = staticFallback;
-      }
-      
-      // Add new data point - use live Firebase data for graphs
+      // Add new data point - use raw Firebase values directly
       chartData.timestamps.push(timeLabel);
-      chartData.solar.push(data.solar || 0); // Live Firebase data for graph
-      chartData.battery.push((data.battery || 0) / 10); // Scale battery % to kWh range
-      chartData.consumption.push(powerConsumption);
+      chartData.solar.push(data.solar || 0);
+      chartData.battery.push(data.battery || 0);
+      chartData.consumption.push(data.power || 0);
 
       // Keep only last 20 data points
       if (chartData.timestamps.length > 20) {
