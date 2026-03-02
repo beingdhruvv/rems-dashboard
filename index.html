@@ -7,8 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Roboto:wght@300;500&family=Orbitron:wght@500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <!-- Firebase removed - Using static showcase mode with simulated data -->
   <style>
     :root {
       --primary: #2E7D32;
@@ -1615,7 +1614,7 @@
         <div class="card stat-item">
           <i class="fas fa-solar-panel"></i>
           <h3>Solar Generation</h3>
-          <div class="value">3.5 kW</div>
+          <div class="value">3.6 kW</div>
           <div class="stat-trend up">
             <i class="fas fa-arrow-up"></i>
             <span>12% vs yesterday</span>
@@ -1625,7 +1624,7 @@
         <div class="card stat-item">
           <i class="fas fa-battery-three-quarters"></i>
           <h3>Battery Level</h3>
-          <div class="value">75%</div>
+          <div class="value">92%</div>
           <div class="stat-trend down">
             <i class="fas fa-arrow-down"></i>
             <span>5% last hour</span>
@@ -1635,7 +1634,7 @@
         <div class="card stat-item">
           <i class="fas fa-bolt"></i>
           <h3>Power Usage</h3>
-          <div class="value">2.8 kW</div>
+          <div class="value">12.6 kW</div>
           <div class="stat-trend up">
             <i class="fas fa-arrow-up"></i>
             <span>8% vs average</span>
@@ -1645,7 +1644,7 @@
         <div class="card stat-item">
           <i class="fas fa-temperature-high"></i>
           <h3>System Temperature</h3>
-          <div class="value">24°C</div>
+          <div class="value">28°C</div>
           <div class="stat-trend stable">
             <i class="fas fa-equals"></i>
             <span>Stable</span>
@@ -1706,89 +1705,141 @@
   </div>
 
   <script>
-    // Firebase Configuration - REPLACE WITH YOUR FIREBASE CONFIG
-    const firebaseConfig = {
-      apiKey: "AIzaSyAJmAxim4X0McfWy80W3SMwRfxK46bHZ7g",
-      authDomain: "rems-dashboard.firebaseapp.com",
-      databaseURL: "https://rems-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "rems-dashboard",
-      storageBucket: "rems-dashboard.firebasestorage.app",
-      messagingSenderId: "89739980249",
-      appId: "1:89739980249:web:7920673b22550b6d9c7dc8"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
+    // Static Showcase Mode - Simulated Data
     // Global Variables
     let powerChart;
     let autoMode = true; // Auto mode ON by default
     let gridActiveStartTime = null;
-    let firebaseConnected = true;
-    let espOnline = false;
-    let lastDataTimestamp = null;
-    let dataTimeoutCheck = null;
     let currentSensorData = {};
-    let currentControls = {};
+    let currentControls = { auto: true, solar: false, battery: false, grid: false };
     let chartData = {
       timestamps: [],
       solar: [],
       battery: [],
       consumption: []
     };
+    
+    // Graph data state (for chart updates only) - keep everything in a 1-100 scale (no conversion)
+    let graphData = {
+      solar: 17.5,       // 15-20 range
+      battery: 91.0,     // 90-92 range
+      consumption: 52.0  // 50-55 range
+    };
+    
+    // Base values for graph data with smooth transitions (small step sizes to avoid large jumps)
+    const graphBaseValues = {
+      solar: { min: 15, max: 20, current: 17.5, trend: 0.12, step: 0.18, decimals: 2 },
+      battery: { min: 90, max: 92, current: 91.0, trend: 0.06, step: 0.10, decimals: 1 },
+      consumption: { min: 50, max: 55, current: 52.0, trend: 0.10, step: 0.18, decimals: 2 }
+    };
 
-    // Monitor Firebase Connection
-    function monitorConnection() {
-      const connectedRef = database.ref(".info/connected");
-      connectedRef.on("value", function(snap) {
-        const wasConnected = firebaseConnected;
-        firebaseConnected = snap.val() === true;
+    // Generate Graph Data with smooth transitions
+    // Ensures consecutive points are not identical for each series (no repeated values at points).
+    function generateGraphData() {
+      const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+      const roundTo = (v, decimals) => parseFloat(v.toFixed(decimals));
+      
+      Object.keys(graphBaseValues).forEach(key => {
+        const base = graphBaseValues[key];
         
-        if (!firebaseConnected && wasConnected) {
-          showNotification("Firebase connection lost", "error", "firebase_disconnected");
-          updateSystemStatus(false);
-        } else if (firebaseConnected && !wasConnected) {
-          const now = new Date();
-          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-          showNotification(`[${timeStr}] Firebase connected successfully`, "success", "firebase_connected");
-          // Remove disconnected alert if exists
-          removeNotificationByKey('firebase_disconnected');
+        // Small random variation for smooth transitions
+        const variation = (Math.random() - 0.5) * base.step;
+        base.current += base.trend + variation;
+        
+        // Keep within bounds and bounce the trend
+        if (base.current > base.max) {
+          base.current = base.max;
+          base.trend = -Math.abs(base.trend);
+        } else if (base.current < base.min) {
+          base.current = base.min;
+          base.trend = Math.abs(base.trend);
         }
+        
+        // Occasionally reverse trend for natural movement
+        if (Math.random() < 0.15) {
+          base.trend *= -1;
+        }
+        
+        // Round and ensure the new point differs from the previous point for that key
+        const prev = graphData[key];
+        let next = roundTo(base.current, base.decimals ?? 2);
+        
+        if (next === prev) {
+          // Nudge by one small step in either direction, still respecting bounds
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          next = roundTo(clamp(next + dir * base.step, base.min, base.max), base.decimals ?? 2);
+          
+          // If rounding still makes it equal, nudge again in the opposite direction
+          if (next === prev) {
+            next = roundTo(clamp(next - dir * base.step, base.min, base.max), base.decimals ?? 2);
+          }
+        }
+        
+        graphData[key] = next;
+        base.current = next; // keep internal state aligned with the rounded value
       });
+      
+      return {
+        solar: graphData.solar,             // 15-20
+        battery: graphData.battery,         // 90-92
+        consumption: graphData.consumption, // 50-55
+        timestamp: Date.now()
+      };
     }
-
-    // Monitor ESP Online Status and Data Timeout
-    function monitorESPStatus() {
-      // Check for data timeout (> 10 seconds)
-      if (dataTimeoutCheck) {
-        clearInterval(dataTimeoutCheck);
+    
+    // Start graph data simulation
+    function startDataSimulation() {
+      // Initialize chart with smooth historical data points in correct ranges (2.5s spacing)
+      const now = new Date();
+      let lastPoint = null;
+      for (let i = 19; i >= 0; i--) {
+        const time = new Date(now.getTime() - i * 2500);
+        const timeLabel = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        chartData.timestamps.push(timeLabel);
+        
+        // Generate smooth history points using the same generator (prevents big jumps and avoids duplicates)
+        lastPoint = generateGraphData();
+        chartData.solar.push(lastPoint.solar);
+        chartData.battery.push(lastPoint.battery);
+        chartData.consumption.push(lastPoint.consumption);
       }
       
-      dataTimeoutCheck = setInterval(() => {
-        if (lastDataTimestamp) {
-          const timeSinceLastData = Date.now() - lastDataTimestamp;
-          if (timeSinceLastData > 10000) { // 10 seconds
-            if (espOnline) {
-              espOnline = false;
-              showNotification("No data received for 10+ seconds. ESP may be offline.", "warning", "esp_timeout");
-              updateSystemStatus(false);
-            }
-          } else {
-            if (!espOnline && firebaseConnected) {
-              espOnline = true;
-              showNotification("ESP online - data received", "info", "esp_online");
-              updateSystemStatus(true);
-              removeNotificationByKey('esp_timeout');
-            }
-          }
-        } else {
-          if (espOnline) {
-            espOnline = false;
-            updateSystemStatus(false);
-          }
+      // Initial chart update
+      if (powerChart && chartData.timestamps.length > 0) {
+        try {
+          powerChart.updateOptions({
+            xaxis: { categories: chartData.timestamps }
+          });
+          powerChart.updateSeries([
+            { name: "Solar Generation", data: chartData.solar },
+            { name: "Battery Level", data: chartData.battery },
+            { name: "Energy Consumption", data: chartData.consumption }
+          ]);
+        } catch (e) {
+          console.error('Chart update error:', e);
         }
-      }, 2000); // Check every 2 seconds
+      }
+      
+      // Initial data update (for efficiency calculation and timestamp)
+      const initialGraphData = lastPoint || generateGraphData();
+      updateCards(initialGraphData);
+      updateLastUpdate(initialGraphData.timestamp);
+      
+      // Show ONLINE status after 1 second
+      setTimeout(() => {
+        updateSystemStatus(true);
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        showNotification(`[${timeStr}] System online - data streaming`, "success", "system_online");
+      }, 1000);
+      
+      // Update graph data every 2.5 seconds
+      setInterval(() => {
+        const graphData = generateGraphData();
+        updateCards(graphData);
+        updateCharts(graphData);
+        updateLastUpdate(graphData.timestamp);
+      }, 2500);
     }
 
     // Update System Status Indicator
@@ -1798,7 +1849,7 @@
       const systemStatus = document.getElementById('systemStatus');
       
       if (indicator && statusText && systemStatus) {
-        if (online && firebaseConnected) {
+        if (online) {
           indicator.className = 'system-status-indicator online';
           statusText.textContent = 'ONLINE';
           systemStatus.textContent = 'All systems operational';
@@ -1814,9 +1865,9 @@
       // Power Consumption Chart
       const options = {
         series: [
-          { name: "Solar Generation (kWh)", data: [] },
-          { name: "Battery Storage (kWh)", data: [] },
-          { name: "Energy Consumption (kWh)", data: [] }
+          { name: "Solar Generation", data: [] },
+          { name: "Battery Level", data: [] },
+          { name: "Energy Consumption", data: [] }
         ],
         chart: {
           type: "area",
@@ -1847,6 +1898,9 @@
           }
         },
         yaxis: {
+          min: 0,
+          max: 100,
+          tickAmount: 5,
           labels: {
             style: {
               colors: 'var(--text)',
@@ -1871,17 +1925,15 @@
       powerChart = new ApexCharts(document.querySelector("#graph"), options);
       powerChart.render();
 
-      // Setup Firebase Realtime Listeners
-      setupFirebaseListeners();
-
-      // Initialize system status
+      // Initialize system status (will show ONLINE after 1 second)
       updateSystemStatus(false);
 
-      // Initialize Solar Card Toggle
-      initSolarCardToggle();
+      // Initialize Solar Card (will use simulated data)
+      // No need for toggle anymore, will use real simulated values
 
       // Initialize control buttons state (disabled if auto mode is on)
       const initialControls = { auto: true, solar: false, battery: false, grid: false };
+      currentControls = initialControls;
       updateControls(initialControls);
 
       // Show startup notifications
@@ -1895,8 +1947,8 @@
       setTimeout(() => {
         const now2 = new Date();
         const timeStr2 = `${String(now2.getHours()).padStart(2, '0')}:${String(now2.getMinutes()).padStart(2, '0')}:${String(now2.getSeconds()).padStart(2, '0')}`;
-        showNotification(`[${timeStr2}] Firebase connecting...`, 'info', 'startup_firebase');
-      }, 200);
+        showNotification(`[${timeStr2}] Simulator ready`, 'info', 'startup_simulator');
+      }, 300);
 
       setTimeout(() => {
         const now3 = new Date();
@@ -1904,164 +1956,74 @@
         showNotification(`[${timeStr3}] Dashboard ready`, 'success', 'startup_dashboard');
       }, 500);
 
-      // Initialize Auto Mode ON by default (after a short delay to ensure Firebase is ready)
+      // Start data simulation
       setTimeout(() => {
-        database.ref('controls').once('value', (snapshot) => {
-          const controls = snapshot.val() || {};
-          if (controls.auto === null || controls.auto === undefined) {
-            // Auto mode not set, initialize to true with all others false
-            autoMode = true;
-            database.ref('controls').set({
-              auto: true,
-              solar: false,
-              battery: false,
-              grid: false
-            }).then(() => {
-              // Update UI immediately after setting
-              updateControls({ auto: true, solar: false, battery: false, grid: false });
-            });
-          } else {
-            // Ensure auto mode state is correct
-            autoMode = controls.auto === true;
-            // Update UI with current controls state
-            updateControls(controls);
-          }
-          const now4 = new Date();
-          const timeStr4 = `${String(now4.getHours()).padStart(2, '0')}:${String(now4.getMinutes()).padStart(2, '0')}:${String(now4.getSeconds()).padStart(2, '0')}`;
-          showNotification(`[${timeStr4}] Device online`, 'success', 'startup_device');
-        });
+        startDataSimulation();
       }, 1000);
     });
 
-    // Firebase Realtime Listeners
-    function setupFirebaseListeners() {
-      // Listen to sensorData
-      database.ref('sensorData').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          currentSensorData = data;
-          lastDataTimestamp = Date.now();
-          
-          // Mark ESP as online when data received
-          if (!espOnline && firebaseConnected) {
-            espOnline = true;
-            showNotification("ESP online - data received", "info", "esp_online");
-            updateSystemStatus(true);
-          }
-          
-          updateCards(data);
-          updateCharts(data);
-          checkWarnings(data);
-          // Update last update time with current timestamp
-          updateLastUpdate(data.timestamp || Date.now());
-          
-          // Auto decision logic when sensor data changes
-          if (autoMode) {
-            autoDecisionLogic(data);
-          }
-        }
-      });
-
-      // Listen to controls
-      database.ref('controls').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const previousAuto = autoMode;
-          const previousControls = { ...currentControls };
-          autoMode = data.auto === true;
-          
-          // Notify on control changes (only if changed)
-          if (previousAuto !== autoMode) {
-            showNotification(`Auto mode ${autoMode ? 'enabled' : 'disabled'}`, autoMode ? 'info' : 'warning', 'auto_mode_change');
-          }
-          
-          // Track individual control changes
-          if (previousControls.solar !== undefined && data.solar !== previousControls.solar) {
-            showNotification(`Solar power ${data.solar ? 'enabled' : 'disabled'}`, data.solar ? 'success' : 'info', 'solar_change');
-          }
-          if (previousControls.battery !== undefined && data.battery !== previousControls.battery) {
-            showNotification(`Battery ${data.battery ? 'enabled' : 'disabled'}`, data.battery ? 'success' : 'info', 'battery_change');
-          }
-          if (previousControls.grid !== undefined && data.grid !== previousControls.grid) {
-            showNotification(`Grid power ${data.grid ? 'enabled' : 'disabled'}`, data.grid ? 'warning' : 'info', 'grid_change');
-          }
-          
-          currentControls = data;
-          updateControls(data);
-          
-          // Track grid active time
-          if (data.grid === true && !gridActiveStartTime) {
-            gridActiveStartTime = Date.now();
-          } else if (data.grid === false) {
-            gridActiveStartTime = null;
-          }
-        }
-      });
+    // Simulated controls update (local only, no Firebase)
+    function updateControlsLocal(data) {
+      const previousAuto = autoMode;
+      const previousControls = { ...currentControls };
+      autoMode = data.auto === true;
       
-      // Initialize monitoring
-      monitorConnection();
-      monitorESPStatus();
-    }
-
-    // Solar card toggle state
-    let solarCardValue = 0.2;
-    let solarCardInterval = null;
-
-    // Initialize Solar Card Toggle
-    function initSolarCardToggle() {
-      if (solarCardInterval) clearInterval(solarCardInterval);
-      
-      const solarCard = document.querySelector('.stat-item:nth-child(1) .value');
-      if (solarCard) {
-        solarCard.textContent = solarCardValue.toFixed(1) + ' kWh';
+      // Notify on control changes (only if changed)
+      if (previousAuto !== autoMode) {
+        showNotification(`Auto mode ${autoMode ? 'enabled' : 'disabled'}`, autoMode ? 'info' : 'warning', 'auto_mode_change');
       }
       
-      solarCardInterval = setInterval(() => {
-        solarCardValue = solarCardValue === 0.2 ? 0.3 : 0.2;
-        if (solarCard) {
-          solarCard.textContent = solarCardValue.toFixed(1) + ' kWh';
-        }
-      }, 9000); // Toggle every 9 seconds (between 8-10)
+      // Track individual control changes
+      if (previousControls.solar !== undefined && data.solar !== previousControls.solar) {
+        showNotification(`Solar power ${data.solar ? 'enabled' : 'disabled'}`, data.solar ? 'success' : 'info', 'solar_change');
+      }
+      if (previousControls.battery !== undefined && data.battery !== previousControls.battery) {
+        showNotification(`Battery ${data.battery ? 'enabled' : 'disabled'}`, data.battery ? 'success' : 'info', 'battery_change');
+      }
+      if (previousControls.grid !== undefined && data.grid !== previousControls.grid) {
+        showNotification(`Grid power ${data.grid ? 'enabled' : 'disabled'}`, data.grid ? 'warning' : 'info', 'grid_change');
+      }
+      
+      currentControls = data;
+      updateControls(data);
+      
+      // Track grid active time
+      if (data.grid === true && !gridActiveStartTime) {
+        gridActiveStartTime = Date.now();
+      } else if (data.grid === false) {
+        gridActiveStartTime = null;
+      }
     }
 
-    // Update Dashboard Cards
+    // Update Dashboard Cards - Cards are now static, only efficiency updates
     function updateCards(data) {
-      // Solar Generation - NOT from Firebase, uses toggle
-      // (handled by initSolarCardToggle)
-
-      // Battery Level - dynamic from Firebase
-      const batteryValue = Math.round(data.battery || 0);
-      const batteryCard = document.querySelector('.stat-item:nth-child(2) .value');
-      if (batteryCard) batteryCard.textContent = batteryValue + '%';
-
-      // Power Usage - dynamic from Firebase (voltage * current) with fallback
-      const voltage = data.voltage || 0;
-      const current = data.current || 0;
-      const calculatedPower = (voltage * current) / 1000; // Convert to kW
-      const staticFallback = 2.8; // Static fallback value
+      // Cards remain static with fixed values:
+      // Solar Generation: 3.6 kW
+      // Battery Level: 92%
+      // Power Usage: 12.6 kW
+      // System Temperature: 28°C
       
-      // Use dynamic value if valid (not 0, not NaN, not undefined), otherwise use fallback
-      let powerUsage = calculatedPower;
-      if (!data || !data.voltage || !data.current || 
-          isNaN(calculatedPower) || calculatedPower === 0 || 
-          !isFinite(calculatedPower)) {
-        powerUsage = staticFallback;
-      }
-      
-      const powerCard = document.querySelector('.stat-item:nth-child(3) .value');
-      if (powerCard) powerCard.textContent = powerUsage.toFixed(1) + ' kW';
-
-      // Temperature - dynamic from Firebase
-      const tempValue = Math.round(data.temperature || 0);
-      const tempCard = document.querySelector('.stat-item:nth-child(4) .value');
-      if (tempCard) tempCard.textContent = tempValue + '°C';
-
-      // Update Efficiency (still uses real data for calculation)
-      const efficiency = calculateEfficiency(data);
+      // Only update efficiency based on static card values
+      const efficiency = calculateEfficiencyStatic();
       updateEfficiency(efficiency);
     }
+    
+    // Calculate Efficiency using static card values
+    function calculateEfficiencyStatic() {
+      // Using static values: Solar = 3.6 kW, Power Usage = 12.6 kW
+      const solar = 3.6;
+      const power = 12.6;
+      
+      if (power === 0) return 0;
+      
+      // Efficiency: (solar generation / total power consumption) * 100
+      const efficiency = (solar / power) * 100;
+      
+      // Clamp between 0-100
+      return Math.min(100, Math.max(0, Math.round(efficiency)));
+    }
 
-    // Calculate Efficiency - REAL calculation from Firebase data
+    // Calculate Efficiency - calculation from simulated data
     function calculateEfficiency(data) {
       if (!data) return 0;
       const solar = data.solar || 0;
@@ -2095,18 +2057,18 @@
       if (efficiencyValue) efficiencyValue.textContent = `${efficiency}%`;
     }
 
-    // Update Charts - uses live Firebase data
-    function updateCharts(data) {
-      if (!powerChart || !data) return;
+    // Update Charts - uses graph data (all series on a 1-100 scale; no conversion)
+    function updateCharts(graphData) {
+      if (!powerChart || !graphData) return;
 
       const now = new Date();
-      const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       
-      // Add new data point - use raw Firebase values directly
+      // Add new data point - use graph values
       chartData.timestamps.push(timeLabel);
-      chartData.solar.push(data.solar || 0);
-      chartData.battery.push(data.battery || 0);
-      chartData.consumption.push(data.power || 0);
+      chartData.solar.push(graphData.solar || 0); // 15-20 range
+      chartData.battery.push(graphData.battery || 0); // 90-92 range
+      chartData.consumption.push(graphData.consumption || 0); // 50-55 range
 
       // Keep only last 20 data points
       if (chartData.timestamps.length > 20) {
@@ -2123,9 +2085,9 @@
             xaxis: { categories: chartData.timestamps }
           });
           powerChart.updateSeries([
-            { name: "Solar Generation (kWh)", data: chartData.solar },
-            { name: "Battery Storage (kWh)", data: chartData.battery },
-            { name: "Energy Consumption (kWh)", data: chartData.consumption }
+            { name: "Solar Generation", data: chartData.solar },
+            { name: "Battery Level", data: chartData.battery },
+            { name: "Energy Consumption", data: chartData.consumption }
           ]);
         } catch (e) {
           console.error('Chart update error:', e);
@@ -2135,6 +2097,7 @@
 
     // Update Controls UI
     function updateControls(data) {
+      const anyManualOn = data.solar === true || data.battery === true || data.grid === true;
       const controls = ['solar', 'battery', 'grid', 'auto'];
       controls.forEach(type => {
         const btn = document.getElementById(`${type}Btn`);
@@ -2152,27 +2115,43 @@
           }
 
           // Disable manual buttons when auto mode is ON
-          if (type !== 'auto' && autoMode) {
+          if (type !== 'auto') {
+            if (autoMode) {
+              btn.disabled = true;
+              btn.style.cursor = 'not-allowed';
+              btn.style.opacity = '0.4';
+              btn.style.pointerEvents = 'none';
+            } else {
+              btn.disabled = false;
+              btn.style.cursor = 'pointer';
+              btn.style.pointerEvents = 'auto';
+              // In manual mode, inactive buttons are dimmer
+              btn.style.opacity = isActive ? '1' : '0.6';
+            }
+            return;
+          }
+
+          // Auto button rules:
+          // - Auto ON: manual buttons are disabled (handled above)
+          // - Auto OFF + any manual ON: Auto cannot be turned on (disable Auto button)
+          if (!autoMode && anyManualOn) {
             btn.disabled = true;
             btn.style.cursor = 'not-allowed';
-            btn.style.opacity = '0.4';
             btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.4';
+            btn.title = 'Turn OFF Solar/Battery/Grid to enable Auto Mode';
           } else {
             btn.disabled = false;
             btn.style.cursor = 'pointer';
             btn.style.pointerEvents = 'auto';
-            // In manual mode, inactive buttons are dimmer
-            if (type !== 'auto' && !autoMode && !isActive) {
-              btn.style.opacity = '0.6';
-            } else if (type === 'auto' || isActive) {
-              btn.style.opacity = '1';
-            }
+            btn.style.opacity = '1';
+            btn.title = '';
           }
         }
       });
     }
 
-    // Auto Decision Logic
+    // Auto Decision Logic (Local only, no Firebase)
     let lastAutoDecision = null;
     let autoDecisionTimeout = null;
     function autoDecisionLogic(data) {
@@ -2206,72 +2185,70 @@
         if (lastAutoDecision !== decisionKey) {
           lastAutoDecision = decisionKey;
           decision.auto = true;
-          database.ref('controls').update(decision);
+          updateControlsLocal(decision);
         }
       }, 500); // 500ms debounce
     }
 
-    // System Control Functions
+    // System Control Functions (Local only, no Firebase)
     function toggleControl(type) {
       if (autoMode && type !== 'auto') {
         showNotification('Warning: Disable Auto Mode first', 'warning');
         return;
       }
       
-      // If not auto mode and toggling solar/battery/grid, make them mutually exclusive
-      if (!autoMode && type !== 'auto' && (type === 'solar' || type === 'battery' || type === 'grid')) {
-        database.ref('controls').once('value', (snapshot) => {
-          const current = snapshot.val() || {};
-          const newValue = !current[type];
-          
-          // Only one source can be active at a time
-          const updates = {
-            solar: false,
-            battery: false,
-            grid: false
-          };
-          
-          if (newValue) {
-            updates[type] = true;
-          }
-          
-          updates.auto = false; // Disable auto when manually toggling
-          database.ref('controls').update(updates);
-        });
-        return;
-      }
-      
-      database.ref('controls').once('value', (snapshot) => {
-        const current = snapshot.val() || {};
-        const newValue = !current[type];
-        sendControl(type, newValue);
-      });
+      const current = currentControls || {};
+      const newValue = !current[type];
+      sendControl(type, newValue);
     }
 
     function toggleAutoMode() {
-      database.ref('controls/auto').once('value', (snapshot) => {
-        const currentAuto = snapshot.val() === true;
-        sendControl('auto', !currentAuto);
-      });
+      const currentAuto = currentControls.auto === true;
+      sendControl('auto', !currentAuto);
     }
 
-    // Send Control to Firebase
+    // Send Control (Local only, no Firebase)
     function sendControl(type, value) {
-      const updates = {};
-      updates[type] = value;
-      
-      database.ref('controls').update(updates).then(() => {
-        // If turning on auto mode, run decision logic after update
-        if (type === 'auto' && value === true) {
-          setTimeout(() => {
-            if (currentSensorData && Object.keys(currentSensorData).length > 0) {
-              autoDecisionLogic(currentSensorData);
-            }
-          }, 100);
+      const updates = { ...currentControls };
+
+      // AUTO MODE RULES:
+      // - Turning AUTO OFF enables all three manual sources at once (user can then toggle any on/off).
+      // - Turning AUTO ON is only allowed when all manual sources are OFF; it also forces them OFF.
+      if (type === 'auto') {
+        if (value === false) {
+          updates.auto = false;
+          updates.solar = true;
+          updates.battery = true;
+          updates.grid = true;
+          updateControlsLocal(updates);
+          return;
         }
-      }).catch((error) => {
-        showNotification(`Failed to update ${type} control`, 'error', `control_error_${type}`);
-      });
+
+        const anyManualOn = currentControls.solar === true || currentControls.battery === true || currentControls.grid === true;
+        if (anyManualOn) {
+          showNotification('Turn OFF Solar/Battery/Grid before enabling Auto Mode', 'warning');
+          updateControls(currentControls);
+          return;
+        }
+
+        updates.auto = true;
+        updates.solar = false;
+        updates.battery = false;
+        updates.grid = false;
+        updateControlsLocal(updates);
+        return;
+      }
+
+      // MANUAL SOURCE RULES:
+      // - Manual toggles only work when AUTO is OFF.
+      if (currentControls.auto === true) {
+        showNotification('Warning: Disable Auto Mode first', 'warning');
+        return;
+      }
+
+      updates.auto = false;
+      updates[type] = value;
+      updateControlsLocal(updates);
     }
 
     // Check Warnings
@@ -3342,4 +3319,5 @@
     });
   </script>
 </body>
+  
 </html>
